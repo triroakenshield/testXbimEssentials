@@ -9,6 +9,8 @@ using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Ifc2x3.ProfileResource;
 using Xbim.Ifc2x3.RepresentationResource;
 using Xbim.Ifc2x3.SharedBldgElements;
+using Xbim.Ifc2x3.TopologyResource;
+//using IfcFeatureElementSubtraction = Xbim.Ifc4.ProductExtension.IfcFeatureElementSubtraction;
 
 namespace testXbimEssentials
 {
@@ -42,15 +44,19 @@ namespace testXbimEssentials
             {
                 if (_point000 == null)
                 {
-                    _point000 = _model.Instances.New<IfcCartesianPoint>(p =>
-                    {
-                        p.X = 0;
-                        p.Y = 0;
-                        p.Z = 0;
-                    });
+                    _point000 = GetPoint3D(0, 0, 0);
                 }
                 return _point000;
             }
+        }
+
+        public IfcDirection GetDirection2D(double x, double y)
+        {
+            return _model.Instances.New<IfcDirection>(d =>
+            {
+                d.X = x;
+                d.Y = y;
+            });
         }
 
         private IfcDirection _direction10;
@@ -61,11 +67,7 @@ namespace testXbimEssentials
             {
                 if (_direction10 == null)
                 {
-                    _direction10 = _model.Instances.New<IfcDirection>(d =>
-                    {
-                        d.X = 1;
-                        d.Y = 0;
-                    });
+                    _direction10 = GetDirection2D(1, 0);
                 }
                 return _direction10;
             }
@@ -79,11 +81,7 @@ namespace testXbimEssentials
             {
                 if (_direction01 == null)
                 {
-                    _direction01 = _model.Instances.New<IfcDirection>(d =>
-                    {
-                        d.X = 0;
-                        d.Y = 1;
-                    });
+                    _direction01 = GetDirection2D(0, 1);
                 }
                 return _direction01;
             }
@@ -242,7 +240,7 @@ namespace testXbimEssentials
             });
         }
 
-        private IfcShapeRepresentation GetSweptSolid(double xDim, double yDim, double depth)
+        public IfcShapeRepresentation GetSweptSolid(IfcAxis2Placement3D position, double xDim, double yDim, double depth)
         {
             var prof = _model.Instances.New<IfcRectangleProfileDef>(p =>
             {
@@ -255,7 +253,7 @@ namespace testXbimEssentials
             var solid = _model.Instances.New<IfcExtrudedAreaSolid>(s =>
             {
                 s.SweptArea = prof;
-                s.Position = WorldCoordinateSystem;
+                s.Position = position;
                 s.ExtrudedDirection = Direction001;
                 s.Depth = depth;
             });
@@ -274,16 +272,144 @@ namespace testXbimEssentials
 
         public IfcSlab GetSlab()
         {
-            var shape = _model.Instances.New<IfcProductDefinitionShape>();
-            shape.Representations.Add(GetSweptSolid(1000, 1000, 100));
-
             return _model.Instances.New<IfcSlab>(s =>
             {
                 s.Name = "slab";
                 s.ObjectPlacement = Local;
-                s.Representation = shape;
+                s.Representation = GetShape(GetSweptSolid(WorldCoordinateSystem, 1000, 1000, 100));
                 s.PredefinedType = IfcSlabTypeEnum.BASESLAB;
             });
+        }
+
+        public IfcProductDefinitionShape GetShape(IfcShapeRepresentation representation)
+        {
+            var shape = _model.Instances.New<IfcProductDefinitionShape>();
+            shape.Representations.Add(representation);
+            return shape;
+        }
+
+        public IfcAxis2Placement3D GetAxis(double x, double y, double z)
+        {
+            return _model.Instances.New<IfcAxis2Placement3D>(a => a.Location = GetPoint3D(x, y, z));
+        }
+
+        public IfcWallStandardCase GetWall(string name, IfcShapeRepresentation shape)
+        {
+            return _model.Instances.New<IfcWallStandardCase>(w =>
+            {
+                w.Name = name;
+                w.ObjectPlacement = Local;
+                w.Representation = GetShape(shape);
+            });
+        }
+
+        public IfcCartesianPoint GetPoint3D(double x, double y, double z)
+        {
+            return _model.Instances.New<IfcCartesianPoint>(p =>
+            {
+                p.X = x;
+                p.Y = y;
+                p.Z = z;
+            });
+        }
+
+        public IfcPolyLoop GetPolyLoop(IfcCartesianPoint p0, IfcCartesianPoint p1, IfcCartesianPoint p2,
+            IfcCartesianPoint p3)
+        {
+            var loop = _model.Instances.New<IfcPolyLoop>();
+            loop.Polygon.Add(p0);
+            loop.Polygon.Add(p1);
+            loop.Polygon.Add(p2);
+            loop.Polygon.Add(p3);
+            return loop;
+        }
+
+        public IfcFace GetFace(IfcCartesianPoint p0, IfcCartesianPoint p1, IfcCartesianPoint p2,
+            IfcCartesianPoint p3)
+        {
+            var loop = GetPolyLoop(p0, p1, p2, p3);
+            var bound = _model.Instances.New<IfcFaceOuterBound>(b =>
+            {
+                b.Bound = loop;
+                b.Orientation = true;
+            });
+            return _model.Instances.New<IfcFace>(f => f.Bounds.Add(bound));
+        }
+
+        public IfcShapeRepresentation GetBrep()
+        {
+            var p60 = GetPoint3D(0, 0, 0);
+            var p61 = GetPoint3D(200, 0, 0);
+            var p62 = GetPoint3D(200, 200, 0);
+            var p63 = GetPoint3D(0, 200, 0);
+            var p64 = GetPoint3D(0, 0, 500);
+            var p65 = GetPoint3D(200, 0, 500);
+            var p66 = GetPoint3D(200, 200, 500);
+            var p67 = GetPoint3D(0, 200, 500);
+
+            var shell = _model.Instances.New<IfcClosedShell>();
+            shell.CfsFaces.Add(GetFace(p60, p61, p62, p63));
+            shell.CfsFaces.Add(GetFace(p64, p65, p66, p67));
+            shell.CfsFaces.Add(GetFace(p60, p61, p65, p64));
+            shell.CfsFaces.Add(GetFace(p61, p62, p66, p65));
+            shell.CfsFaces.Add(GetFace(p62, p63, p67, p66));
+            shell.CfsFaces.Add(GetFace(p63, p60, p64, p67));
+
+            var brep = _model.Instances.New<IfcFacetedBrep>(b => b.Outer = shell);
+
+            var body = _model.Instances.New<IfcShapeRepresentation>(s =>
+            {
+                s.ContextOfItems = ModelContext;
+                s.RepresentationIdentifier = "Body";
+                s.RepresentationType = "Brep";
+            });
+
+            body.Items.Add(brep);
+
+            return body;
+        }
+
+        public IfcLocalPlacement GetLocalPlacement(double x, double y, double z)
+        {
+            return _model.Instances.New<IfcLocalPlacement>(l
+                => l.RelativePlacement = GetAxis(x, y, z));
+        }
+
+        public IfcDoor GetDoor(string name, IfcLocalPlacement local, IfcProductDefinitionShape shape)
+        {
+            return _model.Instances.New<IfcDoor>(w =>
+            {
+                w.Name = name;
+                w.ObjectPlacement = local;
+                w.Representation = shape;
+            });
+        }
+
+        public IfcOpeningElement GetOpeningElement(IfcLocalPlacement local, IfcProductDefinitionShape shape)
+        {
+            return _model.Instances.New<IfcOpeningElement>(o =>
+            {
+                o.ObjectPlacement = local;
+                o.Representation = shape;
+            });
+        }
+
+        public IfcRelVoidsElement GetVoidsElement(IfcBuildingElement elem, IfcFeatureElementSubtraction open)
+        {
+            return _model.Instances.New<IfcRelVoidsElement>(v =>
+            {
+                v.RelatingBuildingElement = elem;
+                v.RelatedOpeningElement = open;
+            });
+        }
+
+        public IfcRelFillsElement GetFillsElement(IfcBuildingElement elem, IfcOpeningElement open)
+        {
+            return _model.Instances.New<IfcRelFillsElement>(f =>
+            {
+                f.RelatedBuildingElement = elem;
+                f.RelatingOpeningElement = open;
+            } );
         }
 
         public void Dispose()
