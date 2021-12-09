@@ -61,9 +61,11 @@ namespace testXbimEssentials
 
                 bs.AddElement(door);
 
-                var open1 = modelHelper.GetOpeningElement(localPlacement, doorShape);
-                modelHelper.GetVoidsElement(wall4, open1);
-                modelHelper.GetFillsElement(door, open1);
+                //var open1 = modelHelper.GetOpeningElement(localPlacement, doorShape);
+                //modelHelper.GetVoidsElement(wall4, open1);
+                //modelHelper.GetFillsElement(door, open1);
+
+                modelHelper.GetOpeningElement(wall4, door);
 
                 tr.Commit();
             }

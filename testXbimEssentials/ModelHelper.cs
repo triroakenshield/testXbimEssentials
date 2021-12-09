@@ -385,7 +385,7 @@ namespace testXbimEssentials
             });
         }
 
-        public IfcOpeningElement GetOpeningElement(IfcLocalPlacement local, IfcProductDefinitionShape shape)
+        public IfcOpeningElement GetOpeningElement(IfcObjectPlacement local, IfcProductRepresentation shape)
         {
             return _model.Instances.New<IfcOpeningElement>(o =>
             {
@@ -410,6 +410,14 @@ namespace testXbimEssentials
                 f.RelatedBuildingElement = elem;
                 f.RelatingOpeningElement = open;
             } );
+        }
+
+        public IfcOpeningElement GetOpeningElement(IfcBuildingElement host, IfcBuildingElement client)
+        {
+            var open1 = GetOpeningElement(client.ObjectPlacement, client.Representation);
+            GetVoidsElement(host, open1);
+            GetFillsElement(client, open1);
+            return open1;
         }
 
         public void Dispose()
