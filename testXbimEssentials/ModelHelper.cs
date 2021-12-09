@@ -4,13 +4,16 @@ using Xbim.Common;
 using Xbim.Ifc2x3.GeometricConstraintResource;
 using Xbim.Ifc2x3.GeometricModelResource;
 using Xbim.Ifc2x3.GeometryResource;
+using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.MeasureResource;
 using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Ifc2x3.ProfileResource;
+using Xbim.Ifc2x3.PropertyResource;
 using Xbim.Ifc2x3.RepresentationResource;
 using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.Ifc2x3.TopologyResource;
-//using IfcFeatureElementSubtraction = Xbim.Ifc4.ProductExtension.IfcFeatureElementSubtraction;
+// ReSharper disable StringLiteralTypo
+// ReSharper disable IdentifierTypo
 
 namespace testXbimEssentials
 {
@@ -34,6 +37,16 @@ namespace testXbimEssentials
                 }
                 return _point00;
             }
+        }
+
+        public IfcCartesianPoint GetPoint3D(double x, double y, double z)
+        {
+            return _model.Instances.New<IfcCartesianPoint>(p =>
+            {
+                p.X = x;
+                p.Y = y;
+                p.Z = z;
+            });
         }
 
         private IfcCartesianPoint _point000;
@@ -104,6 +117,11 @@ namespace testXbimEssentials
                 }
                 return _direction001;
             }
+        }
+
+        public IfcAxis2Placement3D GetAxis(double x, double y, double z)
+        {
+            return _model.Instances.New<IfcAxis2Placement3D>(a => a.Location = GetPoint3D(x, y, z));
         }
 
         private IfcAxis2Placement3D _worldCoordinateSystem;
@@ -270,69 +288,11 @@ namespace testXbimEssentials
             return body;
         }
 
-        public IfcRoof GetRoof(string name, IfcObjectPlacement local, IfcProductDefinitionShape shape, IfcRoofTypeEnum type)
-        {
-            return _model.Instances.New<IfcRoof>(r =>
-            {
-                r.Name = name;
-                r.ObjectPlacement = local;
-                r.Representation = shape;
-                r.ShapeType = type;
-            });
-        }
-
-        public IfcSlab GetSlab(string name, IfcObjectPlacement local, IfcProductDefinitionShape shape, IfcSlabTypeEnum type)
-        {
-            return _model.Instances.New<IfcSlab>(s =>
-            {
-                s.Name = name;
-                s.ObjectPlacement = local;
-                s.Representation = shape;
-                s.PredefinedType = type;
-            });
-        }
-
-        public IfcSlab GetSlab()
-        {
-            return _model.Instances.New<IfcSlab>(s =>
-            {
-                s.Name = "slab";
-                s.ObjectPlacement = Local;
-                s.Representation = GetShape(GetSweptSolid(WorldCoordinateSystem, 1000, 1000, 100));
-                s.PredefinedType = IfcSlabTypeEnum.BASESLAB;
-            });
-        }
-
         public IfcProductDefinitionShape GetShape(IfcShapeRepresentation representation)
         {
             var shape = _model.Instances.New<IfcProductDefinitionShape>();
             shape.Representations.Add(representation);
             return shape;
-        }
-
-        public IfcAxis2Placement3D GetAxis(double x, double y, double z)
-        {
-            return _model.Instances.New<IfcAxis2Placement3D>(a => a.Location = GetPoint3D(x, y, z));
-        }
-
-        public IfcWallStandardCase GetWall(string name, IfcShapeRepresentation shape)
-        {
-            return _model.Instances.New<IfcWallStandardCase>(w =>
-            {
-                w.Name = name;
-                w.ObjectPlacement = Local;
-                w.Representation = GetShape(shape);
-            });
-        }
-
-        public IfcCartesianPoint GetPoint3D(double x, double y, double z)
-        {
-            return _model.Instances.New<IfcCartesianPoint>(p =>
-            {
-                p.X = x;
-                p.Y = y;
-                p.Z = z;
-            });
         }
 
         public IfcPolyLoop GetPolyLoop(IfcCartesianPoint p0, IfcCartesianPoint p1, IfcCartesianPoint p2,
@@ -406,6 +366,49 @@ namespace testXbimEssentials
                 => l.RelativePlacement = GetAxis(x, y, z));
         }
 
+        public IfcRoof GetRoof(string name, IfcObjectPlacement local, IfcProductDefinitionShape shape, IfcRoofTypeEnum type)
+        {
+            return _model.Instances.New<IfcRoof>(r =>
+            {
+                r.Name = name;
+                r.ObjectPlacement = local;
+                r.Representation = shape;
+                r.ShapeType = type;
+            });
+        }
+
+        public IfcSlab GetSlab(string name, IfcObjectPlacement local, IfcProductDefinitionShape shape, IfcSlabTypeEnum type)
+        {
+            return _model.Instances.New<IfcSlab>(s =>
+            {
+                s.Name = name;
+                s.ObjectPlacement = local;
+                s.Representation = shape;
+                s.PredefinedType = type;
+            });
+        }
+
+        public IfcSlab GetSlab()
+        {
+            return _model.Instances.New<IfcSlab>(s =>
+            {
+                s.Name = "slab";
+                s.ObjectPlacement = Local;
+                s.Representation = GetShape(GetSweptSolid(WorldCoordinateSystem, 1000, 1000, 100));
+                s.PredefinedType = IfcSlabTypeEnum.BASESLAB;
+            });
+        }
+
+        public IfcWallStandardCase GetWall(string name, IfcShapeRepresentation shape)
+        {
+            return _model.Instances.New<IfcWallStandardCase>(w =>
+            {
+                w.Name = name;
+                w.ObjectPlacement = Local;
+                w.Representation = GetShape(shape);
+            });
+        }
+
         public IfcDoor GetDoor(string name, IfcObjectPlacement local, IfcProductDefinitionShape shape)
         {
             return _model.Instances.New<IfcDoor>(w =>
@@ -425,6 +428,8 @@ namespace testXbimEssentials
                 w.Representation = shape;
             });
         }
+
+        #region IfcOpeningElement
 
         public IfcOpeningElement GetOpeningElement(IfcObjectPlacement local, IfcProductRepresentation shape)
         {
@@ -460,6 +465,31 @@ namespace testXbimEssentials
             GetFillsElement(client, open1);
             return open1;
         }
+
+        #endregion
+
+        #region IfcPropertySet
+
+        public IfcPropertySet GetPropertySet(string name)
+        {
+            return _model.Instances.New<IfcPropertySet>(p => p.Name = $"Pset_{name}");
+        }
+
+        public IfcPropertySingleValue GetPropertySingleValue(string name, IfcValue nominalValue)
+        {
+            return _model.Instances.New<IfcPropertySingleValue>(p =>
+            {
+                p.Name = name;
+                p.NominalValue = nominalValue;
+            });
+        }
+
+        public IfcRelDefinesByProperties GetRelDefinesByProperties()
+        {
+            return _model.Instances.New<IfcRelDefinesByProperties>();
+        }
+
+        #endregion
 
         public void Dispose()
         {

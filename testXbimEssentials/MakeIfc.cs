@@ -1,6 +1,7 @@
 ﻿using Xbim.Common.Step21;
 using Xbim.Ifc;
 using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc2x3.MeasureResource;
 using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.IO;
 
@@ -84,6 +85,16 @@ namespace testXbimEssentials
 
                 var roofSlab = modelHelper.GetSlab("roofSlab", roofLocalPlacement, roofShape, IfcSlabTypeEnum.ROOF);
                 roof.AddAggregates(roofSlab);
+
+                //IfcPropertySet
+
+                var propertySet = modelHelper.GetPropertySet("test_ps");
+                propertySet.HasProperties.Add(modelHelper.GetPropertySingleValue("p1", new IfcBoolean(true)));
+                propertySet.HasProperties.Add(modelHelper.GetPropertySingleValue("p2", new IfcLabel("testLabelProperty")));
+
+                var relDefinesByProperties = modelHelper.GetRelDefinesByProperties();
+                relDefinesByProperties.RelatingPropertyDefinition = propertySet;
+                relDefinesByProperties.RelatedObjects.Add(door);
 
                 tr.Commit();
             }
