@@ -108,7 +108,7 @@ namespace testXbimEssentials
 
         private IfcAxis2Placement3D _worldCoordinateSystem;
 
-        private IfcAxis2Placement3D WorldCoordinateSystem
+        public IfcAxis2Placement3D WorldCoordinateSystem
         {
             get
             {
@@ -208,7 +208,7 @@ namespace testXbimEssentials
 
         private IfcLocalPlacement _local;
 
-        private IfcLocalPlacement Local
+        public IfcLocalPlacement Local
         {
             get
             {
@@ -268,6 +268,28 @@ namespace testXbimEssentials
             body.Items.Add(solid);
 
             return body;
+        }
+
+        public IfcRoof GetRoof(string name, IfcObjectPlacement local, IfcProductDefinitionShape shape, IfcRoofTypeEnum type)
+        {
+            return _model.Instances.New<IfcRoof>(r =>
+            {
+                r.Name = name;
+                r.ObjectPlacement = local;
+                r.Representation = shape;
+                r.ShapeType = type;
+            });
+        }
+
+        public IfcSlab GetSlab(string name, IfcObjectPlacement local, IfcProductDefinitionShape shape, IfcSlabTypeEnum type)
+        {
+            return _model.Instances.New<IfcSlab>(s =>
+            {
+                s.Name = name;
+                s.ObjectPlacement = local;
+                s.Representation = shape;
+                s.PredefinedType = type;
+            });
         }
 
         public IfcSlab GetSlab()
@@ -369,15 +391,34 @@ namespace testXbimEssentials
             return body;
         }
 
+        public IfcLocalPlacement GetLocalPlacement(IfcObjectPlacement local, double x, double y, double z)
+        {
+            return _model.Instances.New<IfcLocalPlacement>(l =>
+            {
+                l.PlacementRelTo = local;
+                l.RelativePlacement = GetAxis(x, y, z);
+            });
+        }
+
         public IfcLocalPlacement GetLocalPlacement(double x, double y, double z)
         {
             return _model.Instances.New<IfcLocalPlacement>(l
                 => l.RelativePlacement = GetAxis(x, y, z));
         }
 
-        public IfcDoor GetDoor(string name, IfcLocalPlacement local, IfcProductDefinitionShape shape)
+        public IfcDoor GetDoor(string name, IfcObjectPlacement local, IfcProductDefinitionShape shape)
         {
             return _model.Instances.New<IfcDoor>(w =>
+            {
+                w.Name = name;
+                w.ObjectPlacement = local;
+                w.Representation = shape;
+            });
+        }
+
+        public IfcWindow GetWindow(string name, IfcObjectPlacement local, IfcProductDefinitionShape shape)
+        {
+            return _model.Instances.New<IfcWindow>(w =>
             {
                 w.Name = name;
                 w.ObjectPlacement = local;

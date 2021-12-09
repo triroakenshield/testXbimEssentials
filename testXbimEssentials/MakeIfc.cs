@@ -1,6 +1,7 @@
 ﻿using Xbim.Common.Step21;
 using Xbim.Ifc;
 using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc2x3.SharedBldgElements;
 using Xbim.IO;
 
 namespace testXbimEssentials
@@ -27,7 +28,11 @@ namespace testXbimEssentials
                 var bs = modelHelper.GetBuildingStorey();
                 //b.BuildingStoreys.ad
                 b.AddAggregates(bs);
-                bs.AddElement(modelHelper.GetSlab());
+
+                var roofShape = modelHelper.GetShape(modelHelper
+                    .GetSweptSolid(modelHelper.WorldCoordinateSystem, 1000, 1000, 100));
+
+                bs.AddElement(modelHelper.GetSlab("slab", modelHelper.Local, roofShape, IfcSlabTypeEnum.BASESLAB));
 
                 var wall1 = modelHelper.GetWall("wall1",
                     modelHelper.GetSweptSolid(
@@ -66,6 +71,19 @@ namespace testXbimEssentials
                 //modelHelper.GetFillsElement(door, open1);
 
                 modelHelper.GetOpeningElement(wall4, door);
+
+                var windowLocalPlacement = modelHelper.GetLocalPlacement(-100, -600, 400);
+                var window = modelHelper.GetWindow("window", windowLocalPlacement, doorShape);
+
+                bs.AddElement(window);
+                modelHelper.GetOpeningElement(wall3, window);
+
+                var roofLocalPlacement = modelHelper.GetLocalPlacement(modelHelper.Local, 0, 0, 1100);
+                var roof = modelHelper.GetRoof("roof", roofLocalPlacement, null, IfcRoofTypeEnum.FLAT_ROOF);
+                bs.AddElement(roof);
+
+                var roofSlab = modelHelper.GetSlab("roofSlab", roofLocalPlacement, roofShape, IfcSlabTypeEnum.ROOF);
+                roof.AddAggregates(roofSlab);
 
                 tr.Commit();
             }
